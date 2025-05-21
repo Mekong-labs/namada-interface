@@ -1,0 +1,3 @@
+indexer_url = "https://indexer.namada.tududes.com"
+rpc_url = "https://rpc.namada.tududes.com"
+masp_indexer_url = "https://masp.namada.tududes.com"
