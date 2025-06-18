@@ -10,6 +10,7 @@ import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   assetBalanceAtomFamily,
   availableChainsAtom,
+  enabledIbcAssetsDenomFamily,
   ibcChannelsFamily,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
@@ -27,6 +28,7 @@ import { generatePath, useNavigate } from "react-router-dom";
 import namadaChain from "registry/namada.json";
 import { AddressWithAssetAndAmountMap } from "types";
 import { useTransactionEventListener } from "utils";
+import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
@@ -60,8 +62,10 @@ export const IbcTransfer = (): JSX.Element => {
       walletAddress: sourceAddress,
     })
   );
-  const { trackEvent } = useFathomTracker();
 
+  const { trackEvent } = useFathomTracker();
+  const { data: enabledAssets, isLoading: isLoadingEnabledAssets } =
+    useAtomValue(enabledIbcAssetsDenomFamily(ibcChannels?.namadaChannel));
   const [shielded, setShielded] = useState<boolean>(true);
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
@@ -83,15 +87,17 @@ export const IbcTransfer = (): JSX.Element => {
     selectedAssetAddress ? userAssets?.[selectedAssetAddress] : undefined;
 
   const availableAssets = useMemo(() => {
-    if (!userAssets) return undefined;
+    if (!enabledAssets || !userAssets) return undefined;
+
     const output: AddressWithAssetAndAmountMap = {};
     for (const key in userAssets) {
-      if (registry?.assets.assets.find((a) => a.base === key)?.base) {
+      if (enabledAssets.includes(userAssets[key].asset.base)) {
         output[key] = { ...userAssets[key] };
       }
     }
+
     return output;
-  }, [userAssets]);
+  }, [enabledAssets, userAssets]);
 
   // Manage the history of transactions
   const { storeTransaction } = useTransactionActions();
@@ -184,13 +190,15 @@ export const IbcTransfer = (): JSX.Element => {
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-10 gap-6">
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="ibcToNam" isShielded={shielded} />
-        <h2 className="text-lg">IBC Transfer to Namada</h2>
       </header>
+      <div className="mb-6">
+        <IbcTabNavigation />
+      </div>
       <TransferModule
         source={{
-          isLoadingAssets: isLoadingBalances,
+          isLoadingAssets: isLoadingBalances || isLoadingEnabledAssets,
           availableAssets,
           selectedAssetAddress,
           availableAmount,

@@ -1,5 +1,6 @@
 import { ActionButton, Panel, SkeletonLoading } from "@namada/components";
 import { routes } from "App/routes";
+import { UnclaimedRewardsCard } from "App/Staking/UnclaimedRewardsCard";
 import { transparentTokensAtom } from "atoms/balance";
 import { useAmountsInFiat } from "hooks/useAmountsInFiat";
 import { useAtomValue } from "jotai";
@@ -18,7 +19,7 @@ export const UnshieldedAssetsOverview = (): JSX.Element => {
       !transparentTokensQuery.isFetched);
 
   return (
-    <Panel className="relative z-10 px-6 rounded-t-none -mt-px h-full">
+    <Panel className="relative px-6 rounded-t-none h-full">
       <div className="flex justify-between items-center gap-16 mt-4">
         <TotalBalanceCard
           balanceInFiat={unshieldedAmountInFiat}
@@ -34,6 +35,7 @@ export const UnshieldedAssetsOverview = (): JSX.Element => {
             </>
           }
         />
+        <UnclaimedRewardsCard />
       </div>
       {transparentTokensQuery.isSuccess && (
         <div className="mt-5 overflow-hidden">

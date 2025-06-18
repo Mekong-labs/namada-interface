@@ -28,7 +28,6 @@ import { createTransferDataFromNamada } from "lib/transactions";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import namadaChain from "registry/namada.json";
-import { twMerge } from "tailwind-merge";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 export const NamadaTransfer: React.FC = () => {
@@ -111,9 +110,10 @@ export const NamadaTransfer: React.FC = () => {
     onBeforeBroadcast: async () => {
       setCurrentStatus("Broadcasting transaction to Namada...");
     },
-    onError: async () => {
+    onError: async (originalError) => {
       setCurrentStatus("");
       setCurrentStatusExplanation("");
+      setGeneralErrorMessage((originalError as Error).message);
     },
     asset: selectedAsset?.asset,
   });
@@ -170,7 +170,12 @@ export const NamadaTransfer: React.FC = () => {
         throw "Invalid transaction response";
       }
     } catch (err) {
-      setGeneralErrorMessage(err + "");
+      // We only set the general error message if it is not already set by onError
+      if (generalErrorMessage === "") {
+        setGeneralErrorMessage(
+          err instanceof Error ? err.message : String(err)
+        );
+      }
       trackEvent(`${shielded ? "Shielded" : "Transparent"} Transfer: error`);
     }
   };
@@ -179,22 +184,12 @@ export const NamadaTransfer: React.FC = () => {
   setLedgerStatusStop(isPerformingTransfer);
 
   return (
-    <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 pt-5 pb-20">
-      <header className="flex flex-col items-center text-center mb-3 gap-6">
-        <h1
-          className={twMerge("mt-6 text-xl", isSourceShielded && "text-yellow")}
-        >
-          Send
-        </h1>
+    <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
         <NamadaTransferTopHeader
           isSourceShielded={isSourceShielded}
           isDestinationShielded={target ? isTargetShielded : undefined}
         />
-        <h2 className="text-md mb-5">
-          Send assets to other accounts.
-          <br />
-          Sending from Namada Shielded to Namada Shielded is fully private
-        </h2>
       </header>
       <TransferModule
         source={{

@@ -16,9 +16,8 @@ export const proposalStatusToString = (status: ProposalStatus): string => {
   const statusText: Record<ProposalStatus, string> = {
     pending: "Upcoming",
     ongoing: "Ongoing",
-    passed: "Passed",
-    rejected: "Rejected",
-    executed: "Executed",
+    executedRejected: "Rejected",
+    executedPassed: "Passed",
   };
 
   return statusText[status];
@@ -144,6 +143,8 @@ export const toErrorDetail = (
         return `${error.toString()}.\n${toGasMsg(args.gasLimit)}`;
       case ResultCode.WasmRuntimeError:
         // We can only check error type by reading the error message
+        return `${error.toString()}.\n${textToErrorDetail(info, tx[0])}`;
+      case ResultCode.FeeError:
         return `${error.toString()}.\n${textToErrorDetail(info, tx[0])}`;
 
       default:

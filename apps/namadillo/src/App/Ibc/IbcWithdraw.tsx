@@ -48,6 +48,7 @@ import {
   toDisplayAmount,
   useTransactionEventListener,
 } from "utils";
+import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const defaultChainId = "cosmoshub-4";
@@ -78,7 +79,7 @@ export const IbcWithdraw = (): JSX.Element => {
   const [txHash, setTxHash] = useState<string | undefined>();
   const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
   const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
-
+  const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
   const chainTokens = useAtomValue(chainTokensAtom);
 
   const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
@@ -271,7 +272,8 @@ export const IbcWithdraw = (): JSX.Element => {
     invariant(props, "Invalid transaction data");
 
     const transferTransaction: IbcTransferTransactionData = {
-      hash: tx.encodedTxData.txs[0].innerTxHashes[0].toLowerCase(),
+      hash: tx.encodedTxData.txs[0].hash,
+      innerHash: tx.encodedTxData.txs[0].innerTxHashes[0].toLowerCase(),
       currentStep: TransferStep.WaitingConfirmation,
       rpc: "",
       type: shielded ? "ShieldedToIbc" : "TransparentToIbc",
@@ -283,7 +285,7 @@ export const IbcWithdraw = (): JSX.Element => {
       memo: tx.encodedTxData.wrapperTxProps.memo || props.memo,
       displayAmount,
       shielded,
-      sourceAddress: props.source,
+      sourceAddress: `${alias} - shielded`,
       sourceChannel: props.channelId,
       destinationAddress: props.receiver,
       createdAt: new Date(),
@@ -348,10 +350,12 @@ export const IbcWithdraw = (): JSX.Element => {
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-10 gap-6">
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="namToIbc" isShielded={shielded} />
-        <h2 className="text-lg">Withdraw assets from Namada via IBC</h2>
       </header>
+      <div className="mb-6">
+        <IbcTabNavigation />
+      </div>
       <TransferModule
         source={{
           isLoadingAssets,

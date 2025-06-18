@@ -341,7 +341,8 @@ export type TransferStage = IbcTransferStage | NamadaTransferStage;
 export type BaseTransferTransaction = TransferStage & {
   rpc: string;
   asset: Asset;
-  hash?: string;
+  hash: string;
+  innerHash: string;
   displayAmount: BigNumber;
   chainId: string;
   sourceAddress: string;
@@ -394,6 +395,7 @@ export type LedgerAccountInfo = {
 
 export type MaspAssetRewards = {
   asset: Asset;
+  address: Address | undefined;
   kdGain: BigNumber;
   kpGain: BigNumber;
   lockedAmountTarget: BigNumber;
