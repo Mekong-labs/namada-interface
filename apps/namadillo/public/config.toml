@@ -1,6 +1,6 @@
 # Uncomment the following lines to define your default indexer and rpc urls
-#indexer_url = ""
-#rpc_url = ""
-#masp_indexer_url = ""
+indexer_url = "https://indexer.namada.tududes.com"
+rpc_url = "https://rpc.namada.tududes.com"
+masp_indexer_url = "https://masp.namada.tududes.com"
 #localnet_enabled = false
 #fathom_site_id = ""
