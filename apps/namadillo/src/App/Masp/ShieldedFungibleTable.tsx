@@ -60,7 +60,7 @@ export const ShieldedFungibleTable = ({
           key={`balance-${originalAddress}`}
           className="flex flex-col text-right leading-tight"
         >
-          {amount.toString()}
+          <TokenCurrency symbol={asset.symbol} amount={amount} />
           {dollar && (
             <FiatCurrency
               className="text-neutral-600 text-sm"
@@ -94,7 +94,7 @@ export const ShieldedFungibleTable = ({
             size="xs"
             outlineColor="white"
             className="w-fit ml-auto mr-10"
-            onClick={() => navigate(routes.maspUnshield)}
+            onClick={() => navigate(routes.unshield)}
           >
             Unshield
           </ActionButton>
