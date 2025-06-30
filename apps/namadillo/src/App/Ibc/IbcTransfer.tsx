@@ -64,8 +64,9 @@ export const IbcTransfer = (): JSX.Element => {
   );
 
   const { trackEvent } = useFathomTracker();
-  const { data: enabledAssets, isLoading: isLoadingEnabledAssets } =
-    useAtomValue(enabledIbcAssetsDenomFamily(ibcChannels?.namadaChannel));
+  const { data: enabledAssets } = useAtomValue(
+    enabledIbcAssetsDenomFamily(ibcChannels?.namadaChannel)
+  );
   const [shielded, setShielded] = useState<boolean>(true);
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
@@ -91,7 +92,16 @@ export const IbcTransfer = (): JSX.Element => {
 
     const output: AddressWithAssetAndAmountMap = {};
     for (const key in userAssets) {
-      if (enabledAssets.includes(userAssets[key].asset.base)) {
+      const counterpartyBaseDenom =
+        userAssets[key].asset.traces?.[0].counterparty.base_denom || "";
+
+      // We look for both native for chain and in counterparty base denom
+      // TODO/IMPORTANT: this will not work for HOUSEFIRE NAM as it's not a part of
+      // osmosis asset list
+      if (
+        enabledAssets.includes(userAssets[key].asset.base) ||
+        enabledAssets.includes(counterpartyBaseDenom)
+      ) {
         output[key] = { ...userAssets[key] };
       }
     }
@@ -198,7 +208,7 @@ export const IbcTransfer = (): JSX.Element => {
       </div>
       <TransferModule
         source={{
-          isLoadingAssets: isLoadingBalances || isLoadingEnabledAssets,
+          isLoadingAssets: isLoadingBalances,
           availableAssets,
           selectedAssetAddress,
           availableAmount,
