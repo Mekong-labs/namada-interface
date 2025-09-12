@@ -43,7 +43,7 @@ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 yarn || exit 1
 yarn prepare || exit 1
 
-yarn --cwd ${PKG_DIR} wasm:build:multicore || exit 1
+yarn --cwd ${PKG_DIR} wasm:build || exit 1
 yarn --cwd ${PKG_DIR} build:only || exit 1
 
 if [[ ! -d "$OUTPUT_DIR" ]]; then
