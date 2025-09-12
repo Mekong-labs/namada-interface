@@ -1,11 +1,11 @@
 import { Stack } from "@namada/components";
+import { Sdk } from "@namada/sdk";
 import routes from "App/routes";
 import clsx from "clsx";
 import { useVaultContext } from "context";
 import { FaDiscord, FaXTwitter } from "react-icons/fa6";
 import { GoAlert, GoLinkExternal, GoQuestion } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
-import sdkPackage from "../../../../../packages/sdk/package.json";
 import extensionPackage from "../../../package.json";
 
 const { NAMADA_INTERFACE_REVISION: revision = "" } = process.env;
@@ -124,7 +124,7 @@ export const AppHeaderNavigation = ({
                 </a>
               </li>
               <li>
-                SDK Version: <strong>{sdkPackage.version}</strong>
+                SDK Version: <strong>{Sdk.version}</strong>
               </li>
             </Stack>
           </div>

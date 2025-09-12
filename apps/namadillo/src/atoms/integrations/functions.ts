@@ -92,7 +92,7 @@ const cosmosisForHousefire = {
 // ---- Housefire Chain Registry Section End ----
 
 // Whitelist of supported chains
-const SUPPORTED_CHAINS_MAP = new Map<string, ChainRegistryEntry>(
+const SUPPORTED_IBC_CHAINS_MAP = new Map<string, ChainRegistryEntry>(
   Object.entries({
     osmosis: osmosis,
     "osmosis-housefire": cosmosisForHousefire,
@@ -102,6 +102,25 @@ const SUPPORTED_CHAINS_MAP = new Map<string, ChainRegistryEntry>(
     stride: stride,
     neutron: neutron,
     noble: noble,
+  })
+);
+
+const SUPPORTED_NAM_CHAINS_MAP = new Map<string, ChainRegistryEntry>(
+  Object.entries({
+    namada: namada,
+    "namada-housefire": housefire,
+  })
+);
+
+export const SUPPORTED_ASSETS_MAP = new Map<string, string[]>(
+  Object.entries({
+    osmosis: ["NAM", "OSMO"],
+    cosmoshub: ["ATOM"],
+    celestia: ["TIA"],
+    nyx: ["NYM"],
+    stride: ["stOSMO", "stATOM", "stTIA"],
+    neutron: ["NTRN"],
+    noble: ["USDC"],
   })
 );
 
@@ -154,19 +173,20 @@ export const getChannelFromIbcInfo = (
 export const getChainRegistryByChainId = (
   chainId: string
 ): ChainRegistryEntry | undefined => {
-  return SUPPORTED_CHAINS_MAP.values().find(
-    (registry) => registry.chain.chain_id === chainId
-  );
+  return [
+    ...SUPPORTED_IBC_CHAINS_MAP.values(),
+    ...SUPPORTED_NAM_CHAINS_MAP.values(),
+  ].find((registry) => registry.chain.chain_id === chainId);
 };
 
 export const getChainRegistryByChainName = (
   chainName: string
 ): ChainRegistryEntry | undefined => {
-  return SUPPORTED_CHAINS_MAP.get(chainName);
+  return SUPPORTED_IBC_CHAINS_MAP.get(chainName);
 };
 
 export const getAvailableChains = (): Chain[] => {
-  return SUPPORTED_CHAINS_MAP.entries()
+  return SUPPORTED_IBC_CHAINS_MAP.entries()
     .filter(([key]) => !key.includes("housefire"))
     .map(([_, entry]) => entry.chain)
     .toArray();
@@ -209,26 +229,6 @@ export const getIbcAssetByNamadaAsset = (
     }
   });
   return ibcAsset;
-};
-
-export const getNamadaAssetByIbcAsset = (
-  asset: Asset,
-  namadaAssets: NamadaAsset[]
-): NamadaAsset | undefined => {
-  // Returns base denom for provided asset(e.g. "uosmo", "uatom", "unam")
-  const counterpartyBaseDenom =
-    asset.traces?.[0].counterparty.base_denom || asset.base;
-
-  const namadaAsset = namadaAssets.find((namadaAsset) => {
-    return (
-      // Match native token(unam)
-      counterpartyBaseDenom === namadaAsset.base ||
-      // Match any other token
-      counterpartyBaseDenom === namadaAsset.traces?.[0].counterparty.base_denom
-    );
-  });
-
-  return namadaAsset;
 };
 
 export const getNamadaIbcInfo = (isHousefire: boolean): IBCInfo[] => {

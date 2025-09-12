@@ -1,5 +1,9 @@
 import { Stack } from "@namada/components";
-import { ClaimRewardsProps, RedelegateMsgValue, TxProps } from "@namada/types";
+import {
+  ClaimRewardsProps,
+  RedelegateProps,
+  TxProps,
+} from "@namada/sdk-multicore";
 import { mapUndefined, shortenAddress } from "@namada/utils";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { TokenCurrency } from "App/Common/TokenCurrency";
@@ -89,9 +93,7 @@ const getAmountByValidatorListWithErr = <T extends AmountByValidator>(
   );
 };
 
-const getReDelegateDetailList = (
-  data: RedelegateMsgValue[]
-): React.ReactNode => {
+const getReDelegateDetailList = (data: RedelegateProps[]): React.ReactNode => {
   return (
     <Stack as="ul" gap={1}>
       {data.map((entry, idx) => (
@@ -109,7 +111,7 @@ const getReDelegateDetailList = (
 };
 
 const getReDelegateDetailListWithErr = (
-  data: { value: RedelegateMsgValue; error?: string }[]
+  data: { value: RedelegateProps; error?: string }[]
 ): React.ReactNode => {
   return (
     <Stack gap={2}>
@@ -468,7 +470,11 @@ export const useTransactionNotifications = (): void => {
   useTransactionEventListener("UnshieldingTransfer.Success", onTransferSuccess);
 
   useTransactionEventListener(
-    ["IbcTransfer.Success", "IbcWithdraw.Success"],
+    [
+      "IbcTransfer.Success",
+      "IbcWithdraw.Success",
+      "ShieldedIbcWithdraw.Success",
+    ],
     ({ detail: tx }) => {
       if (!tx.hash) return;
       invariant(tx.hash, "Notification error: Invalid Tx hash");
@@ -494,51 +500,57 @@ export const useTransactionNotifications = (): void => {
     }
   );
 
-  useTransactionEventListener("IbcTransfer.Error", ({ detail: tx }) => {
-    if (!tx) return;
+  useTransactionEventListener(
+    ["IbcTransfer.Error", "IbcWithdraw.Error"],
+    ({ detail: tx }) => {
+      if (!tx) return;
 
-    invariant(tx.hash, "Notification error: Invalid Tx provider");
-    const id = createNotificationId([tx.hash]);
-    const title =
-      tx.type === "ShieldedToIbc" || tx.type === "TransparentToIbc" ?
-        "IBC withdraw transaction failed"
-      : "IBC transfer transaction failed";
+      invariant(tx.hash, "Notification error: Invalid Tx provider");
+      const id = createNotificationId([tx.hash]);
+      const title =
+        tx.type === "ShieldedToIbc" || tx.type === "TransparentToIbc" ?
+          "IBC withdraw transaction failed"
+        : "IBC transfer transaction failed";
 
-    dispatchNotification({
-      id,
-      title,
-      description: (
-        <>
-          Your transaction of{" "}
-          <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
-          has failed.
-        </>
-      ),
-      details: tx.errorMessage,
-      type: "error",
-    });
-  });
+      dispatchNotification({
+        id,
+        title,
+        description: (
+          <>
+            Your transaction of{" "}
+            <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
+            has failed.
+          </>
+        ),
+        details: tx.errorMessage,
+        type: "error",
+      });
+    }
+  );
 
-  useTransactionEventListener("IbcWithdraw.Error", ({ detail: tx }) => {
-    if (!tx) return;
+  useTransactionEventListener(
+    ["ShieldedIbcWithdraw.Error"],
+    ({ detail: tx }) => {
+      if (!tx) return;
 
-    invariant(tx.hash, "Notification error: Invalid Tx provider");
-    const id = createNotificationId([tx.hash]);
-    const title = "IBC withdraw transaction failed";
+      invariant(tx.hash, "Notification error: Invalid Tx provider");
+      const id = createNotificationId([tx.hash]);
+      const title = "IBC withdraw transaction failed";
 
-    dispatchNotification({
-      id,
-      title,
-      description: (
-        <>
-          Your transaction of{" "}
-          <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
-          has failed.{" "}
-          <b>Open the Namada extension to access the refund account.</b>
-        </>
-      ),
-      details: tx.errorMessage,
-      type: "error",
-    });
-  });
+      dispatchNotification({
+        id,
+        title,
+        description: (
+          <>
+            Your transaction of{" "}
+            <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
+            has failed.{" "}
+            <b>Open the Namada extension to access the refund account.</b>
+          </>
+        ),
+        details: tx.errorMessage,
+        type: "error",
+      });
+    }
+  );
 };

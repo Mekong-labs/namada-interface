@@ -1,20 +1,14 @@
-import { getSdk } from "@namada/sdk/web";
-import sdkInit from "@namada/sdk/web-init";
+import { initSdk } from "@namada/sdk";
 import clsx from "clsx";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 
 import { ActionButton, Stack } from "@namada/components";
-import {
-  Ledger,
-  makeBip44Path,
-  makeSaplingPath,
-  TxType,
-} from "@namada/sdk/web";
+import { Ledger, makeBip44Path, makeSaplingPath, TxType } from "@namada/sdk";
 import { LedgerError, ResponseSign } from "@zondax/ledger-namada";
 
 import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { chains } from "@namada/chains";
-import { TransferProps } from "@namada/types";
+import { CommitmentDetailProps, TransferProps } from "@namada/types";
 import { PageHeader } from "App/Common";
 import { ApprovalDetails } from "Approvals/Approvals";
 import {
@@ -104,15 +98,12 @@ export const ConfirmSignLedgerTx: React.FC<Props> = ({ details }) => {
       throw new Error("Shielded hash is required for MASP transactions");
     }
 
-    const { cryptoMemory } = await sdkInit();
     // TODO: Find a better way to init the sdk, token has to be any valid token
-    const sdk = getSdk(
-      cryptoMemory,
-      "",
-      "",
-      "",
-      "tnam1q9gr66cvu4hrzm0sd5kmlnjje82gs3xlfg3v6nu7"
-    );
+    const sdk = await initSdk({
+      rpcUrl: "",
+      token: "tnam1q9gr66cvu4hrzm0sd5kmlnjje82gs3xlfg3v6nu7",
+    });
+
     const descriptors = await sdk
       .getMasp()
       .getDescriptorMap(bytes, fromBase64(shieldedHash));
@@ -267,8 +258,10 @@ export const ConfirmSignLedgerTx: React.FC<Props> = ({ details }) => {
             )
             .map((cmt) =>
               cmt.txType === TxType.Transfer ?
-                parseTransferType(cmt as TransferProps, details.wrapperFeePayer)
-                  .type
+                parseTransferType(
+                  cmt as CommitmentDetailProps<TransferProps>,
+                  details.wrapperFeePayer
+                ).type
               : cmt.maspTxIn && cmt.maspTxOut ? "IbcUnshieldTransfer"
               : "IbcTransfer"
             )

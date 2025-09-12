@@ -1,4 +1,5 @@
 import { ActionButton, Panel } from "@namada/components";
+import { Sdk } from "@namada/sdk-multicore";
 import { defaultAccountAtom } from "atoms/accounts";
 import {
   isShieldedSyncCompleteAtom,
@@ -16,7 +17,6 @@ import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import { FaBug } from "react-icons/fa6";
 import { bugReportUrl } from "urls";
-import { version as sdkVersion } from "../../../../../packages/sdk/package.json";
 import { version as namadilloVersion } from "../../../package.json";
 
 export const BugReport = (): JSX.Element => {
@@ -43,7 +43,7 @@ ${currentDate.current}
 
 ## Version Info${sep}
 Namadillo Version: ${namadilloVersion}
-SDK Version: ${sdkVersion}
+SDK Version: ${Sdk.version}
 Keychain Version: ${keychainVersion ?? "?"}
 Indexer Version: ${indexerHealth.data?.version}
 Masp Indexer Version: ${maspIndexerHealth.data?.version}

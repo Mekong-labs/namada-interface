@@ -218,8 +218,10 @@ export const namadaShieldedAssetsAtom = atomWithQuery((get) => {
 
       return mapNamadaAddressesToAssets({
         balances:
-          shieldedBalance?.map((i) => ({ ...i, tokenAddress: i.address })) ??
-          [],
+          shieldedBalance?.map((i) => ({
+            minDenomAmount: i.minDenomAmount,
+            token: { address: i.address },
+          })) ?? [],
         assets: Object.values(chainAssetsMap.data),
       });
     }, [viewingKeysQuery, chainTokensQuery, chainAssetsMap]),
@@ -263,9 +265,9 @@ export const shieldedTokensAtom = atomWithQuery<TokenBalance[]>((get) => {
       async () =>
         mapNamadaAssetsToTokenBalances(
           shieldedAssets.data ?? {},
-          tokenPrices.data ?? {}
+          tokenPrices.isSuccess ? (tokenPrices.data ?? {}) : {}
         ),
-      [shieldedAssets, tokenPrices]
+      [shieldedAssets]
     ),
   };
 });
@@ -320,10 +322,10 @@ export const transparentTokensAtom = atomWithQuery<TokenBalance[]>((get) => {
         Promise.resolve(
           mapNamadaAssetsToTokenBalances(
             transparentAssets.data ?? {},
-            tokenPrices.data ?? {}
+            tokenPrices.isSuccess ? (tokenPrices.data ?? {}) : {}
           )
         ),
-      [transparentAssets, tokenPrices]
+      [transparentAssets]
     ),
   };
 });

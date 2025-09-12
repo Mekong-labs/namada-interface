@@ -1,5 +1,5 @@
 import { ActionButton, Input } from "@namada/components";
-import { AppContext } from "App/App";
+import { FaucetAppContext } from "App/FaucetApp";
 import React, { useContext, useEffect, useState } from "react";
 import { endpoint } from "utils";
 import {
@@ -11,7 +11,7 @@ import {
 
 export const SettingsForm: React.FC = () => {
   const [isFormValid, setIsFormValid] = useState(false);
-  const { setIsModalOpen, baseUrl, setUrl } = useContext(AppContext)!;
+  const { setIsModalOpen, baseUrl, setUrl } = useContext(FaucetAppContext)!;
   const [apiUrl, setApiUrl] = useState(baseUrl);
 
   useEffect(() => {
@@ -29,7 +29,9 @@ export const SettingsForm: React.FC = () => {
 
   const handleSetUrl = (url: string): void => {
     // Strip endpoint from URL if it was provided
-    setUrl(url.replace(endpoint, "").replace(/\/$/, ""));
+    const updatedUrl = url.replace(endpoint, "").replace(/\/$/, "");
+    setUrl(updatedUrl);
+    localStorage.setItem("baseUrl", updatedUrl);
     setIsModalOpen(false);
   };
 

@@ -1,5 +1,5 @@
-import { initMulticore } from "@namada/sdk/inline-init";
-import { getSdk, Sdk, SdkEvents } from "@namada/sdk/web";
+import { Sdk, SdkEvents } from "@namada/sdk-multicore";
+import { initSdk } from "@namada/sdk-multicore/inline";
 import * as Comlink from "comlink";
 import { Init, InitDone, Sync, SyncDone } from "./ShieldedSyncMessages";
 
@@ -27,8 +27,10 @@ export class Worker {
   private sdk: Sdk | undefined;
 
   async init(m: Init): Promise<InitDone> {
-    const { cryptoMemory } = await initMulticore();
-    this.sdk = newSdk(cryptoMemory, m.payload);
+    this.sdk = await initSdk({
+      ...m.payload,
+      maspIndexerUrl: m.payload.maspIndexerUrl || undefined,
+    });
 
     // TODO: this can be reduced to one event listener
     addEventListener(SdkEvents.ProgressBarStarted, (e) => {
@@ -62,16 +64,31 @@ export class Worker {
   }
 }
 
-function newSdk(
-  cryptoMemory: WebAssembly.Memory,
-  payload: Init["payload"]
-): Sdk {
-  const { rpcUrl, token, maspIndexerUrl } = payload;
-  return getSdk(cryptoMemory, rpcUrl, maspIndexerUrl || "", "", token);
-}
-
 async function shieldedSync(sdk: Sdk, payload: Sync["payload"]): Promise<void> {
-  await sdk.rpc.shieldedSync(payload.vks, payload.chainId);
+  const maxRetries = 10;
+  const baseDelayMs = 100;
+  const maxDelayMs = 1000;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await sdk.rpc.shieldedSync(payload.vks, payload.chainId);
+      return;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        break;
+      }
+
+      const delay = Math.min(baseDelayMs * (attempt + 1), maxDelayMs);
+
+      console.warn(
+        `shieldedSync attempt ${attempt + 1} failed, retrying in ${delay}ms:`,
+        error
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error(`shieldedSync failed after ${maxRetries + 1} attempts.`);
 }
 
 Comlink.expose(new Worker());

@@ -1,18 +1,16 @@
 import {
+  BparamsMsgValue,
+  IbcTransferProps,
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TransparentTransferProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
+
+import {
   Account,
   AccountType,
-  BparamsMsgValue,
   GenDisposableSignerResponse,
-  IbcTransferMsgValue,
-  IbcTransferProps,
-  ShieldedTransferMsgValue,
-  ShieldedTransferProps,
-  ShieldingTransferMsgValue,
-  ShieldingTransferProps,
-  TransparentTransferMsgValue,
-  TransparentTransferProps,
-  UnshieldingTransferMsgValue,
-  UnshieldingTransferProps,
 } from "@namada/types";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
@@ -88,7 +86,7 @@ export const clearDisposableSigner = async (address: string): Promise<void> => {
 export const createTransparentTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: TransparentTransferMsgValue[],
+  props: TransparentTransferProps[],
   gasConfig: GasConfig,
   memo?: string
 ): Promise<EncodedTxData<TransparentTransferProps> | undefined> => {
@@ -104,27 +102,56 @@ export const createTransparentTransferTx = async (
   );
 };
 
+const getMaspFeePaymentProps = (
+  source: string,
+  signerAddress: string,
+  gasConfig: GasConfig,
+  bparams?: BparamsMsgValue[]
+): UnshieldingTransferProps & {
+  memo: string;
+} => {
+  const feePaymentMsgValue: UnshieldingTransferProps = {
+    source,
+    data: [
+      {
+        target: signerAddress,
+        token: gasConfig.gasToken,
+        amount: gasConfig.gasPriceInMinDenom.times(gasConfig.gasLimit),
+      },
+    ],
+    bparams,
+    skipFeeCheck: true,
+  };
+  const feePaymentMsgValueWithMemo = {
+    ...feePaymentMsgValue,
+    memo: "MASP_FEE_PAYMENT",
+  };
+  return feePaymentMsgValueWithMemo;
+};
+
 /**
  * "Shielded transfer" refers to transfers between two shielded addresses.
  */
 export const createShieldedTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: ShieldedTransferMsgValue[],
+  props: ShieldedTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<ShieldedTransferProps> | undefined> => {
-  const { publicKey: signerPublicKey } = disposableSigner;
+  const { publicKey: signerPublicKey, address: signerAddress } =
+    disposableSigner;
   const source = props[0]?.data[0]?.source;
   const destination = props[0]?.data[0]?.target;
   const token = props[0]?.data[0]?.token;
   const amount = props[0]?.data[0]?.amount;
 
   let bparams: BparamsMsgValue[] | undefined;
+  const isLedgerAccount = account.type === AccountType.Ledger;
 
-  if (account.type === AccountType.Ledger) {
+  if (isLedgerAccount) {
     const sdk = await getSdkInstance();
     const ledger = await sdk.initLedger();
     bparams = await ledger.getBparams();
@@ -135,11 +162,23 @@ export const createShieldedTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new ShieldedTransferMsgValue({
-        gasSpendingKey: source,
+      const msgValue: ShieldedTransferProps = {
         data: [{ source, target: destination, token, amount }],
         bparams,
-      });
+      };
+
+      const maspFeePaymentProps = (() => {
+        if (!isLedgerAccount) {
+          msgValue.skipFeeCheck = true;
+          return getMaspFeePaymentProps(
+            source,
+            signerAddress,
+            gasConfig,
+            bparams
+          );
+        }
+      })();
+
       const msg: ShieldedTransfer = {
         type: "shielded-transfer",
         payload: {
@@ -151,6 +190,7 @@ export const createShieldedTransferTx = async (
           props: [msgValue],
           chain,
           memo,
+          maspFeePaymentProps,
         },
       };
       return (await workerLink.shieldedTransfer(msg)).payload;
@@ -164,7 +204,7 @@ export const createShieldedTransferTx = async (
 export const createShieldingTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: ShieldingTransferMsgValue[],
+  props: ShieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   memo?: string
@@ -188,11 +228,11 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
-      const msgValue = new ShieldingTransferMsgValue({
+      const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
         bparams,
-      });
+      };
       const msg: Shield = {
         type: "shield",
         payload: {
@@ -215,13 +255,14 @@ export const createShieldingTransferTx = async (
 export const createUnshieldingTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: UnshieldingTransferMsgValue[],
+  props: UnshieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
-  const { publicKey: signerPublicKey } = disposableSigner;
+  const { publicKey: signerPublicKey, address: signerAddress } =
+    disposableSigner;
 
   const source = props[0]?.source;
   const destination = props[0]?.data[0]?.target;
@@ -229,8 +270,9 @@ export const createUnshieldingTransferTx = async (
   const amount = props[0]?.data[0]?.amount;
 
   let bparams: BparamsMsgValue[] | undefined;
+  const isLedgerAccount = account.type === AccountType.Ledger;
 
-  if (account.type === AccountType.Ledger) {
+  if (isLedgerAccount) {
     const sdk = await getSdkInstance();
     const ledger = await sdk.initLedger();
     bparams = await ledger.getBparams();
@@ -241,12 +283,24 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new UnshieldingTransferMsgValue({
+      const msgValue: UnshieldingTransferProps = {
         source,
-        gasSpendingKey: source,
         data: [{ target: destination, token, amount }],
         bparams,
-      });
+      };
+
+      const maspFeePaymentProps = (() => {
+        if (!isLedgerAccount) {
+          msgValue.skipFeeCheck = true;
+          return getMaspFeePaymentProps(
+            source,
+            signerAddress,
+            gasConfig,
+            bparams
+          );
+        }
+      })();
+
       const msg: Unshield = {
         type: "unshield",
         payload: {
@@ -258,6 +312,7 @@ export const createUnshieldingTransferTx = async (
           props: [msgValue],
           chain,
           memo,
+          maspFeePaymentProps,
         },
       };
       return (await workerLink.unshield(msg)).payload;
@@ -286,11 +341,17 @@ export const createIbcTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new IbcTransferMsgValue({
+      const msgValue: IbcTransferProps = {
         ...props[0],
         gasSpendingKey: props[0].gasSpendingKey,
         bparams,
-      });
+      };
+
+      // We only check if we need to reveal the public key if the gas spending key is not provided
+      const publicKeyRevealed =
+        Boolean(msgValue.gasSpendingKey) ||
+        (await isPublicKeyRevealed(account.address));
+
       const msg: IbcTransfer = {
         type: "ibc-transfer",
         payload: {
@@ -302,6 +363,7 @@ export const createIbcTx = async (
           props: [msgValue],
           chain,
           memo,
+          publicKeyRevealed,
         },
       };
 

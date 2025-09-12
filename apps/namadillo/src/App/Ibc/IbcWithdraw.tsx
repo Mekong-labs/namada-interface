@@ -1,5 +1,6 @@
 import { Chain } from "@chain-registry/types";
-import { AccountType, IbcTransferMsgValue } from "@namada/types";
+import { IbcTransferProps } from "@namada/sdk-multicore";
+import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { params, routes } from "App/routes";
 import {
@@ -121,20 +122,26 @@ export const IbcWithdraw = (): JSX.Element => {
     connectToChainId(defaultChainId);
   };
 
-  useTransactionEventListener("IbcWithdraw.Success", async (e) => {
-    if (txHash && e.detail.hash === txHash) {
-      setCompletedAt(new Date());
-      // We are clearing the disposable signer only if the transaction was successful on the target chain
-      if (shielded && refundTarget) {
-        await clearDisposableSigner(refundTarget);
+  useTransactionEventListener(
+    ["IbcWithdraw.Success", "ShieldedIbcWithdraw.Success"],
+    async (e) => {
+      if (txHash && e.detail.hash === txHash) {
+        setCompletedAt(new Date());
+        // We are clearing the disposable signer only if the transaction was successful on the target chain
+        if (shielded && refundTarget) {
+          await clearDisposableSigner(refundTarget);
+        }
+        trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
       }
-      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
     }
-  });
+  );
 
-  useTransactionEventListener("IbcWithdraw.Error", () => {
-    trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
-  });
+  useTransactionEventListener(
+    ["IbcWithdraw.Error", "ShieldedIbcWithdraw.Error"],
+    () => {
+      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
+    }
+  );
 
   const redirectToTimeline = (): void => {
     if (txHash) {
@@ -269,17 +276,21 @@ export const IbcWithdraw = (): JSX.Element => {
   });
 
   const storeTransferTransaction = (
-    tx: TransactionPair<IbcTransferMsgValue>,
+    tx: TransactionPair<IbcTransferProps>,
     displayAmount: BigNumber,
     destinationChainId: string,
     asset: Asset
   ): IbcTransferTransactionData => {
-    const props = tx.encodedTxData.meta?.props[0];
-    invariant(props, "Invalid transaction data");
+    // We have to use the last element from lists in case we revealPK
+    const props = tx.encodedTxData.meta?.props.pop();
+    const lastTx = tx.encodedTxData.txs.pop();
+    invariant(props && lastTx, "Invalid transaction data");
+    const lastInnerTxHash = lastTx.innerTxHashes.pop();
+    invariant(lastInnerTxHash, "Inner tx not found");
 
     const transferTransaction: IbcTransferTransactionData = {
-      hash: tx.encodedTxData.txs[0].hash,
-      innerHash: tx.encodedTxData.txs[0].innerTxHashes[0].toLowerCase(),
+      hash: lastTx.hash,
+      innerHash: lastInnerTxHash.toLowerCase(),
       currentStep: TransferStep.WaitingConfirmation,
       rpc: "",
       type: shielded ? "ShieldedToIbc" : "TransparentToIbc",

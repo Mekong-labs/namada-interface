@@ -56,52 +56,13 @@ jobs:
       - name: Install yarn dependencies
         uses: ./.github/actions/yarn-cache
 
-      - name: Setup Rust toolchain
-        run: rustup toolchain add nightly-2025-03-27
-
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: unit-tests-js
-
-      - name: Install protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - name: Compile WASM
-        run: yarn wasm:build-test
+      - name: Apt update
+        run: sudo apt update
+        shell: bash
 
       - name: Run unit tests
         id: run-unit-tests
         run: yarn test:ci
-
-  unit-tests-wasm:
-    name: WASM unit tests
-    needs: [check-yarn-lock-poisoning]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Rust toolchain
-        run: rustup toolchain add nightly-2025-03-27
-
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: unit-tests-wasm
-
-      - name: Install yarn dependencies
-        uses: ./.github/actions/yarn-cache
-
-      - name: Install protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - name: Install wsrun
-        run: npm install -g wsrun
-
-      - name: Run unit tests
-        id: run-unit-tests
-        run: yarn test-wasm:ci
 
   build-interface:
     name: Build Namadillo
@@ -114,13 +75,9 @@ jobs:
       - name: Install yarn dependencies
         uses: ./.github/actions/yarn-cache
 
-      - name: Setup Rust toolchain
-        run: rustup toolchain add nightly-2025-03-27
-
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: build
+      - name: Apt update
+        run: sudo apt update
+        shell: bash
 
       - name: Install protoc
         run: sudo apt-get install -y protobuf-compiler
@@ -144,20 +101,9 @@ jobs:
       - name: Install yarn dependencies
         uses: ./.github/actions/yarn-cache
 
-      - name: Setup Rust toolchain
-        run: rustup toolchain add nightly-2025-03-27
-
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: build-multicore
-
-      - name: Install protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - name: Build WASM dependencies
-        working-directory: ./apps/extension
-        run: yarn wasm:build:multicore
+      - name: Apt update
+        run: sudo apt update
+        shell: bash
 
       - name: Build the extension
         working-directory: ./apps/extension

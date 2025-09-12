@@ -25,8 +25,8 @@ import { TokenCurrency } from "./TokenCurrency";
 const useSortByNativeToken = () => {
   const nativeToken = useAtomValue(nativeTokenAddressAtom).data;
   return (a: GasPriceTableItem, b: GasPriceTableItem) =>
-    a.token === nativeToken ? -1
-    : b.token === nativeToken ? 1
+    a.token.address === nativeToken ? -1
+    : b.token.address === nativeToken ? 1
     : 0;
 };
 
@@ -41,7 +41,7 @@ const useBuildGasOption = ({
 }) => {
   const gasDollarMap =
     useAtomValue(
-      tokenPricesFamily(gasPriceTable?.map((item) => item.token) ?? [])
+      tokenPricesFamily(gasPriceTable?.map((item) => item.token.address) ?? [])
     ).data ?? {};
 
   return (
@@ -126,19 +126,19 @@ export const GasFeeModal = ({
       isShielded ?
         shieldedAmount.data?.map((balance) => ({
           minDenomAmount: balance.minDenomAmount,
-          tokenAddress: balance.address,
+          token: balance.address,
         }))
       : transparentAmount.data;
 
     return new BigNumber(
-      balances?.find((token) => token.tokenAddress === tokenAddres)
-        ?.minDenomAmount || "0"
+      balances?.find((token) => token.token === tokenAddres)?.minDenomAmount ||
+        "0"
     );
   };
 
   const filterAvailableTokensOnly = (item: GasPriceTableItem): boolean => {
-    if (item.token === nativeToken) return true; // we should always keep the native token
-    return findUserBalanceByTokenAddress(item.token).gt(0);
+    if (item.token.address === nativeToken) return true; // we should always keep the native token
+    return findUserBalanceByTokenAddress(item.token.address).gt(0);
   };
 
   const isLoading = isShielded && !shieldedAmount.data;
@@ -252,17 +252,17 @@ export const GasFeeModal = ({
                   totalInDollars,
                   unitValueInDollars,
                 } = buildGasOption({
-                  gasPriceInMinDenom: item.gasPrice,
-                  gasToken: item.token,
+                  gasPriceInMinDenom: item.gasPriceInMinDenom,
+                  gasToken: item.token.address,
                 });
 
                 const availableAmount = toDisplayAmount(
                   asset,
-                  findUserBalanceByTokenAddress(item.token)
+                  findUserBalanceByTokenAddress(item.token.address)
                 );
 
                 return {
-                  id: item.token,
+                  id: item.token.address,
                   value: (
                     <div
                       className={clsx(
@@ -270,7 +270,7 @@ export const GasFeeModal = ({
                         "justify-between w-full min-h-[42px] mr-5"
                       )}
                     >
-                      <TokenCard address={item.token} asset={asset} />
+                      <TokenCard address={item.token.address} asset={asset} />
                       <div>
                         <div className="text-white text-sm text-right">
                           {unitValueInDollars && (

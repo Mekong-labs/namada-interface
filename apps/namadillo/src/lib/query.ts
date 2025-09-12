@@ -1,12 +1,11 @@
-import { Sdk } from "@namada/sdk/web";
 import {
-  Account,
-  AccountType,
-  TxMsgValue,
+  Sdk,
   TxProps,
-  TxResponseMsgValue,
+  TxResponseProps,
+  UnshieldingTransferProps,
   WrapperTxProps,
-} from "@namada/types";
+} from "@namada/sdk-multicore";
+import { Account, AccountType } from "@namada/types";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
@@ -29,6 +28,7 @@ export type EncodedTxData<T> = {
   type: string;
   txs: (TxProps & {
     innerTxHashes: string[];
+    memos: (number[] | null)[];
   })[];
   wrapperTxProps: WrapperTxProps;
   meta?: {
@@ -86,7 +86,7 @@ export const isPublicKeyRevealed = async (
  * Builds an batch  transactions based on the provided query properties.
  * Each transaction is built through the provided transaction function `txFn`.
  * @param {T[]} queryProps - An array of properties used to build transactions.
- * @param {(WrapperTxProps, T) => Promise<TxMsgValue>} txFn - Function to build each transaction.
+ * @param {(WrapperTxProps, T) => Promise<TxProps>} txFn - Function to build each transaction.
  */
 export const buildTx = async <T>(
   sdk: Sdk,
@@ -94,14 +94,15 @@ export const buildTx = async <T>(
   gasConfig: GasConfig,
   chain: ChainSettings,
   queryProps: T[],
-  txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
+  txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxProps>,
   memo?: string,
-  shouldRevealPk: boolean = true
+  shouldRevealPk: boolean = true,
+  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string } // Optional masp fee payment properties
 ): Promise<EncodedTxData<T>> => {
-  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
-  const txs: TxMsgValue[] = [];
+  const txs: TxProps[] = [];
   const txProps: TxProps[] = [];
 
+  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   // Determine if RevealPK is needed:
   if (shouldRevealPk) {
     const publicKeyRevealed = await isPublicKeyRevealed(account.address);
@@ -111,11 +112,24 @@ export const buildTx = async <T>(
     }
   }
 
-  const encodedTxs = await Promise.all(
-    queryProps.map((props) => txFn.apply(sdk.tx, [wrapperTxProps, props]))
-  );
+  if (maspFeePaymentProps) {
+    const wrapperTxProps = getTxProps(
+      account,
+      gasConfig,
+      chain,
+      maspFeePaymentProps.memo
+    );
+    const maspFeePaymentTx = await sdk.tx.buildUnshieldingTransfer(
+      wrapperTxProps,
+      maspFeePaymentProps
+    );
+    txs.push(maspFeePaymentTx);
+  }
 
-  txs.push(...encodedTxs);
+  for (const props of queryProps) {
+    const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
+    txs.push(tx);
+  }
 
   if (account.type === AccountType.Ledger) {
     txProps.push(...txs);
@@ -125,13 +139,14 @@ export const buildTx = async <T>(
 
   return {
     txs: txProps.map(({ args, hash, bytes, signingData }) => {
-      const innerTxHashes = sdk.tx.getInnerTxHashes(bytes);
+      const innerTxHashes = sdk.tx.getInnerTxMeta(bytes);
       return {
         args,
         hash,
         bytes,
         signingData,
-        innerTxHashes,
+        innerTxHashes: innerTxHashes.map(([hash]) => hash),
+        memos: innerTxHashes.map(([, memo]) => memo),
       };
     }),
     wrapperTxProps,
@@ -197,19 +212,33 @@ export const signEncodedTx = async <T>(
 export const broadcastTransaction = async <T>(
   encodedTx: EncodedTxData<T>,
   signedTxs: Uint8Array[]
-): Promise<PromiseSettledResult<[EncodedTxData<T>, TxResponseMsgValue]>[]> => {
+): Promise<PromiseSettledResult<[EncodedTxData<T>, TxResponseProps]>[]> => {
   const { rpc } = await getSdkInstance();
   const response = await Promise.allSettled(
     encodedTx.txs.map((_, i) =>
       rpc
         .broadcastTx(signedTxs[i])
-        .then(
-          (res) => [encodedTx, res] as [EncodedTxData<T>, TxResponseMsgValue]
-        )
+        .then((res) => [encodedTx, res] as [EncodedTxData<T>, TxResponseProps])
     )
   );
 
   return response;
+};
+
+// We use this to prevent dispatching events for transfer events
+// as they are handled by useTransactionWatcher
+export const isTransferEventType = (
+  eventType?: TransactionEventsClasses
+): boolean => {
+  return eventType ?
+      [
+        "IbcTransfer",
+        "ShieldedTransfer",
+        "TransparentTransfer",
+        "ShieldedTransfer",
+        "UnshieldingTransfer",
+      ].includes(eventType)
+    : false;
 };
 
 export const broadcastTxWithEvents = async <T>(
@@ -222,7 +251,7 @@ export const broadcastTxWithEvents = async <T>(
     throw new Error("Did not receive enough signatures!");
   }
 
-  eventType &&
+  !isTransferEventType(eventType) &&
     window.dispatchEvent(
       new CustomEvent(`${eventType}.Pending`, {
         detail: { tx: encodedTx.txs, data },
@@ -250,7 +279,7 @@ export const broadcastTxWithEvents = async <T>(
     );
 
     // Notification
-    eventType &&
+    !isTransferEventType(eventType) &&
       window.dispatchEvent(
         new CustomEvent(`${eventType}.${status}`, {
           detail: {
@@ -262,15 +291,16 @@ export const broadcastTxWithEvents = async <T>(
         })
       );
   } catch (error) {
-    window.dispatchEvent(
-      new CustomEvent(`${eventType}.Error`, {
-        detail: {
-          tx: encodedTx.txs,
-          data,
-          error,
-        },
-      })
-    );
+    !isTransferEventType(eventType) &&
+      window.dispatchEvent(
+        new CustomEvent(`${eventType}.Error`, {
+          detail: {
+            tx: encodedTx.txs,
+            data,
+            error,
+          },
+        })
+      );
     throw error;
   }
 };
@@ -286,7 +316,7 @@ type Error = string | undefined;
 // Given an array of broadcasted Tx results,
 // collect any errors
 const parseTxAppliedErrors = <T>(
-  results: [EncodedTxData<T>, TxResponseMsgValue][],
+  results: [EncodedTxData<T>, TxResponseProps][],
   txHashes: Hash[],
   data: T[]
 ): TxAppliedResults<T> => {

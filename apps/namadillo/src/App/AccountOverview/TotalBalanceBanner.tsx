@@ -14,13 +14,28 @@ export const TotalBalanceBanner = (): JSX.Element => {
   const { isFetching: isShieldSyncing } = useAtomValue(shieldedBalanceAtom);
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
   const shouldWaitForShieldedSync = requiresNewShieldedSync && isShieldSyncing;
-  const { shieldedQuery, unshieldedQuery, totalAmountInFiat } =
-    useAmountsInFiat();
-
+  const {
+    shieldedQuery,
+    unshieldedQuery,
+    stakingQuery,
+    totalAmountInFiat,
+    hasUnshieldedAssets,
+    hasShieldedAssets,
+  } = useAmountsInFiat();
   const balancesHaveLoaded =
-    shieldedQuery.isSuccess && unshieldedQuery.isSuccess;
-  const hasErrors = shieldedQuery.isError && unshieldedQuery.isError;
+    shieldedQuery.isSuccess &&
+    unshieldedQuery.isSuccess &&
+    stakingQuery.isSuccess;
+  const hasErrors =
+    shieldedQuery.isError && unshieldedQuery.isError && stakingQuery.isError;
   const balanceIsLoading = !balancesHaveLoaded && !hasErrors;
+  const hasAnyAssets = hasUnshieldedAssets || hasShieldedAssets;
+
+  // Hide banner if totalAmountInFiat is 0 but we have assets (means pricing is unavailable)
+  const shouldHideBanner =
+    balancesHaveLoaded && hasAnyAssets && totalAmountInFiat.eq(0);
+
+  if (shouldHideBanner) return <></>;
 
   return (
     <Panel className="py-4">
@@ -32,15 +47,13 @@ export const TotalBalanceBanner = (): JSX.Element => {
           <header className="text-sm mb-3">
             <div className="flex items-center">
               Total Balance in Namada
-              {shouldWaitForShieldedSync && (
-                <span className="relative px-1.5 text-yellow group/tooltip">
-                  <GoInfo />
-                  <Tooltip className="z-40 w-74" position="right">
-                    The total amount of your shielded assets will be available
-                    once Shielded Sync is complete.
-                  </Tooltip>
-                </span>
-              )}
+              <span className="relative px-1.5 text-yellow group/tooltip">
+                <GoInfo />
+                <Tooltip className="z-40 w-74 mt-4" position="right">
+                  This includes the transparent balance, shielded balance, total
+                  staked, total unbonding and total withdrawable NAM
+                </Tooltip>
+              </span>
             </div>
             {!namTransfersEnabled && (
               <small className="block text-xxs text-neutral-400">
