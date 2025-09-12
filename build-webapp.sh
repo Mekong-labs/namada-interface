@@ -35,10 +35,12 @@ apt-get install -y clang
 apt-get install -y pkg-config
 apt-get install -y libssl-dev
 apt-get install -y protobuf-compiler
+apt-get install -y npm
 
 rustup target add wasm32-unknown-unknown
 rustup toolchain add nightly-2025-03-27
 curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+npm install -g yarn
 
 yarn || exit 1
 yarn prepare || exit 1
