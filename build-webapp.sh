@@ -52,4 +52,5 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   exit 1
 fi
 
+mkdir -p "$DEST_DIR"
 mv "$OUTPUT_DIR" "$DEST_DIR"
