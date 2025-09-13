@@ -40,17 +40,16 @@ apt-get install -y npm
 rustup target add wasm32-unknown-unknown
 rustup toolchain add nightly-2025-03-27
 curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-npm install -g yarn
+
 
 yarn || exit 1
 yarn prepare || exit 1
 
-# yarn --cwd ${PKG_DIR} wasm:build || exit 1
-# yarn --cwd ${PKG_DIR} build:only || exit 1
+yarn --cwd ${PKG_DIR} build:only || exit 1
 
-# if [[ ! -d "$OUTPUT_DIR" ]]; then
-#   echo "Missing output directory: $OUTPUT_DIR" 1>&2
-#   exit 1
-# fi
+if [[ ! -d "$OUTPUT_DIR" ]]; then
+  echo "Missing output directory: $OUTPUT_DIR" 1>&2
+  exit 1
+fi
 
-# mv "$OUTPUT_DIR" "$DEST_DIR"
+mv "$OUTPUT_DIR" "$DEST_DIR"
