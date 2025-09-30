@@ -53,4 +53,4 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
 fi
 
 mkdir -p "$DEST_DIR"
-cp -r "$OUTPUT_DIR"/* "$DEST_DIR"
+mv "$OUTPUT_DIR"/* "$DEST_DIR"
