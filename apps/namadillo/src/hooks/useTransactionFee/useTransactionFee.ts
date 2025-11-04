@@ -52,7 +52,7 @@ export const useTransactionFee = (
       tokenPricesFamily(gasPriceTable?.map((item) => item.token.address) ?? [])
     ).data ?? {};
 
-  const averageGasLimit = gasEstimate && BigNumber(gasEstimate.avg);
+  const averageGasLimit = gasEstimate ? BigNumber(gasEstimate.avg) : undefined;
   const gasLimit = gasLimitValue ?? averageGasLimit ?? BigNumber(0);
 
   const availableGasTokenAddress = useMemo(() => {
@@ -74,10 +74,12 @@ export const useTransactionFee = (
           minDenomAmount: BigNumber(balance.minDenomAmount),
           token: balance.address,
         }))
-      : userTransparentBalances.data?.map((balance) => ({
-          minDenomAmount: BigNumber(balance.minDenomAmount),
-          token: balance.token.address,
-        }))) || [];
+      : userTransparentBalances.data
+          ?.map((balance) => ({
+            minDenomAmount: BigNumber(balance.minDenomAmount),
+            token: balance.token?.address,
+          }))
+          .filter((balance) => balance.token)) || [];
 
     // Check if user has enough NAM to pay fees
     const nativeAddressBalance = balances.find(
@@ -88,7 +90,7 @@ export const useTransactionFee = (
       // Find gas price for native token, should be always present
       const gasPrice = gasPriceTable.find(
         ({ token }) => token.address === nativeToken
-      )?.gasPriceInMinDenom;
+      )?.gasPrice;
       invariant(gasPrice, "Gas price for native token is not found");
 
       const requiredBalance = BigNumber(gasLimit).times(gasPrice);
@@ -126,8 +128,8 @@ export const useTransactionFee = (
 
   const gasToken = gasTokenValue ?? availableGasTokenAddress ?? "";
   const gasPrice =
-    gasPriceTable?.find((i) => i.token.address === gasToken)
-      ?.gasPriceInMinDenom ?? BigNumber(0);
+    gasPriceTable?.find((i) => i.token.address === gasToken)?.gasPrice ??
+    BigNumber(0);
 
   const gasConfig: GasConfig = {
     gasLimit,

@@ -3508,10 +3508,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@namada/chain-registry@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@namada/chain-registry@npm:1.3.0"
-  checksum: 10c0/4cde05f35e9bbf94bfa18a43e17ba14e04d8517bd32b11918a4b58f9d5a6ed05b1901f4369617efd8adf8dc2647e91148ce53b16ff79206f7b06986a4a8f1bb8
+"@namada/chain-registry@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@namada/chain-registry@npm:1.5.0"
+  checksum: 10c0/6285eae996c771544bdea180504c81224bd9d2de90cc0ffabf2ccd1fba0acbba2aa35c1b2d88ac7c381dcffa0cba34711a0d8ba92b79f711e6ff9deae22cdca3
   languageName: node
   linkType: hard
 
@@ -3578,8 +3578,8 @@ __metadata:
     "@dao-xyz/borsh": "npm:^5.1.5"
     "@ledgerhq/hw-transport": "npm:^6.31.4"
     "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@namada/sdk": "npm:^0.20.7"
-    "@namada/sdk-node": "npm:^0.20.7"
+    "@namada/sdk": "npm:0.22.0"
+    "@namada/sdk-node": "npm:^0.22.0"
     "@svgr/webpack": "npm:^6.3.1"
     "@types/chrome": "npm:^0.0.237"
     "@types/firefox-webext-browser": "npm:^94.0.1"
@@ -3717,12 +3717,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/indexer-client@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@namada/indexer-client@npm:4.0.3"
+"@namada/indexer-client@npm:4.0.5":
+  version: 4.0.5
+  resolution: "@namada/indexer-client@npm:4.0.5"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/de3e9d8375797826c37f4e5b90e55311ddbbffc8f0f1319fcb0f1b59e2aa17805c8b8eb010aee5fe68d9457300e95dfc935447ee627c30fe57ee9ffb3832cd03
+  checksum: 10c0/4e1c66c57745808bc985740fd9fff220065f0d449478f98b9f811b3dfc27fe0e3604f81f7feb79cde45720ba7d78a5208098a0057963ef47c9283802fb35ab8d
   languageName: node
   linkType: hard
 
@@ -3763,10 +3763,10 @@ __metadata:
     "@cosmjs/encoding": "npm:^0.32.3"
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
-    "@namada/chain-registry": "npm:^1.3.0"
-    "@namada/indexer-client": "npm:4.0.3"
-    "@namada/sdk-multicore": "npm:^0.20.8"
-    "@namada/sdk-node": "npm:^0.20.8"
+    "@namada/chain-registry": "npm:^1.5.0"
+    "@namada/indexer-client": "npm:4.0.5"
+    "@namada/sdk-multicore": "npm:0.22.0"
+    "@namada/sdk-node": "npm:^0.22.0"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
     "@svgr/webpack": "npm:^6.5.1"
@@ -3794,7 +3794,6 @@ __metadata:
     "@vitejs/plugin-react": "npm:^4.3.1"
     animejs: "npm:^3.2.2"
     autoprefixer: "npm:^10.4.16"
-    axios: "npm:^1.8.2"
     bignumber.js: "npm:^9.1.1"
     clsx: "npm:^2.1.1"
     comlink: "npm:^4.4.1"
@@ -3852,9 +3851,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@npm:^0.20.8":
-  version: 0.20.8
-  resolution: "@namada/sdk-multicore@npm:0.20.8"
+"@namada/sdk-multicore@npm:0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk-multicore@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3865,13 +3864,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/ad36e368790e3e18275672a036c7fecf6e3554098b856186daa7656cafb015fd76a7b10dcd8f78ca53303592f1c67908a159cd4b18d5ad5bd3737bb681c88438
+  checksum: 10c0/50c1a125ba744c4d3cb06c0249c21f654e8725a5a858a3d27c802738dc4164aa1e7fa645b241671edfc5a8cb571b6d45ae92cf2ea253ff9bfc459159c47f8ad1
   languageName: node
   linkType: hard
 
-"@namada/sdk-node@npm:^0.20.7":
-  version: 0.20.7
-  resolution: "@namada/sdk-node@npm:0.20.7"
+"@namada/sdk-node@npm:^0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk-node@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3882,30 +3881,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/8050ed2b5882945eae9100b8bcfa4c43764d95a19a50965c99dec1df36e71558bcf1ca8b7e983cf099871426d886d8bd06fa18079b9079a07c2a144106d23c33
+  checksum: 10c0/603b795182563d95d5ec7c4e315c391b52adb33af418d9ab7ff36d78ba67396b5f860e0f2fe216a9785a6da97a0712ef5fe964ee5f25fc2bb7fce757d803814d
   languageName: node
   linkType: hard
 
-"@namada/sdk-node@npm:^0.20.8":
-  version: 0.20.8
-  resolution: "@namada/sdk-node@npm:0.20.8"
-  dependencies:
-    "@cosmjs/encoding": "npm:^0.29.0"
-    "@dao-xyz/borsh": "npm:^5.1.5"
-    "@ledgerhq/hw-transport": "npm:^6.31.4"
-    "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@zondax/ledger-namada": "npm:^2.0.0"
-    bignumber.js: "npm:^9.1.1"
-    buffer: "npm:^6.0.3"
-    semver: "npm:^7.7.2"
-    slip44: "npm:^3.0.18"
-  checksum: 10c0/8632dd2a5995f310d0aa7ad5c11ef8b50a71ca83da33560ff688231c35312e4ed59234aa32b5bc336767917930e20a3ae30538a6bb73eb9825f2196dd5e8c427
-  languageName: node
-  linkType: hard
-
-"@namada/sdk@npm:^0.20.7":
-  version: 0.20.7
-  resolution: "@namada/sdk@npm:0.20.7"
+"@namada/sdk@npm:0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3916,7 +3898,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.6.3"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/0a4ff08bc4ca2c27069d5f6c52e2fc421d5647827a0a4d9386c24d436dbc1c254f31c5f7d5b0b6a650f3ce10730dab1dbf8fd24ba79df1bcb1fae10864ed5f37
+  checksum: 10c0/549442a97e7e0230ae005745f35ae163bdd5e3dc865ff8175f226358f232a878624cd52b2bc4249f58d43a959872516bc1de2aebeb6b01603fd08184e4646d94
   languageName: node
   linkType: hard
 
@@ -6859,24 +6841,13 @@ __metadata:
   linkType: hard
 
 "axios@npm:^1.6.0, axios@npm:^1.6.1":
-  version: 1.7.9
-  resolution: "axios@npm:1.7.9"
+  version: 1.12.2
+  resolution: "axios@npm:1.12.2"
   dependencies:
     follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.0"
+    form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/b7a41e24b59fee5f0f26c1fc844b45b17442832eb3a0fb42dd4f1430eb4abc571fe168e67913e8a1d91c993232bd1d1ab03e20e4d1fee8c6147649b576fc1b0b
-  languageName: node
-  linkType: hard
-
-"axios@npm:^1.8.2":
-  version: 1.8.4
-  resolution: "axios@npm:1.8.4"
-  dependencies:
-    follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.0"
-    proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/450993c2ba975ffccaf0d480b68839a3b2435a5469a71fa2fb0b8a55cdb2c2ae47e609360b9c1e2b2534b73dfd69e2733a1cf9f8215bee0bcd729b72f801b0ce
+  checksum: 10c0/80b063e318cf05cd33a4d991cea0162f3573481946f9129efb7766f38fde4c061c34f41a93a9f9521f02b7c9565ccbc197c099b0186543ac84a24580017adfed
   languageName: node
   linkType: hard
 
@@ -10724,6 +10695,19 @@ __metadata:
     combined-stream: "npm:^1.0.8"
     mime-types: "npm:^2.1.12"
   checksum: 10c0/bb102d570be8592c23f4ea72d7df9daa50c7792eb0cf1c5d7e506c1706e7426a4e4ae48a35b109e91c85f1c0ec63774a21ae252b66f4eb981cb8efef7d0463c8
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "form-data@npm:4.0.4"
+  dependencies:
+    asynckit: "npm:^0.4.0"
+    combined-stream: "npm:^1.0.8"
+    es-set-tostringtag: "npm:^2.1.0"
+    hasown: "npm:^2.0.2"
+    mime-types: "npm:^2.1.12"
+  checksum: 10c0/373525a9a034b9d57073e55eab79e501a714ffac02e7a9b01be1c820780652b16e4101819785e1e18f8d98f0aee866cc654d660a435c378e16a72f2e7cac9695
   languageName: node
   linkType: hard
 

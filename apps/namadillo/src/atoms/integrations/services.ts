@@ -325,7 +325,7 @@ export const handleStandardTransfer = async (
 };
 
 export const fetchLocalnetTomlConfig = async (): Promise<LocalnetToml> => {
-  const response = await fetch("/localnet-config.toml");
+  const response = await fetch("/localnet-config.toml", { cache: "no-store" });
   return toml.parse(await response.text()) as LocalnetToml;
 };
 
